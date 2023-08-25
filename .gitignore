@@ -1,0 +1,6 @@
+
+# ignore the data and the documents
+
+data/
+docs/
+.Rproj.user
