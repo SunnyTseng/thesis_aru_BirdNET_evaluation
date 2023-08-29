@@ -8,6 +8,7 @@ library(data.table)
 library(here)
 library(spatstat.utils)
 library(patchwork)
+library(RColorBrewer)
 
 g1_plot <- function(data, species){
   coul <- brewer.pal(10, "Set3") 
@@ -27,7 +28,7 @@ g1_plot <- function(data, species){
           axis.text = element_text(size = 12),
           legend.title = element_blank(),
           legend.text = element_text(size = 11),
-          legend.position = c(0.85, 0.9),
+          legend.position = c(0.80, 0.80),
           title = element_text(size = 14))
   
   return(g1)
@@ -103,8 +104,6 @@ rate_loess <- data_validation %>%
 
 rate_loess_count <- data_all %>%
   count(common_name, scientific_name, category) %>%
-  group_by(common_name) %>% 
-  mutate(n_cum = revcumsum(n)/sum(n)*100) %>%
   separate(col = category, into = c("from", "to"), sep = ",") %>%
   mutate(from = str_extract(from, pattern = "[^\\(]+") %>% as.numeric(),
          to = str_extract(to, pattern = "[^\\]]+") %>% as.numeric()) %>%
@@ -112,9 +111,10 @@ rate_loess_count <- data_all %>%
   left_join(rate_loess) %>%
   drop_na(rate_loess) %>% 
   mutate(TP = n * rate_loess,
-         FP = n * (1 - rate_loess),
-         TP_cum = n_cum * rate_loess,
-         FP_cum = n_cum * (1 - rate_loess)) 
+         FP = n * (1 - rate_loess)) %>%
+  group_by(common_name) %>%
+  mutate(TP_cum = revcumsum(TP)/sum(n)*100,
+         FP_cum = revcumsum(FP)/sum(n)*100)
 
 
 g1_list <- rate_loess_count %>%
@@ -132,6 +132,29 @@ g1_list <- rate_loess_count %>%
   (g1_list$g1[[16]] | g1_list$g1[[17]] | g1_list$g1[[18]])
 
 g1_list$g1[[19]]
+
+
+
+level_patch <- g1_list$g1[[19]] / g1_list$g1[[7]] / g1_list$g1[[15]] &
+  # plot_annotation(tag_levels = 'A') & 
+  theme(plot.margin = margin(5.5, 5.5, 5.5, 5.5)) &
+  ylab(NULL)
+
+wrap_elements(level_patch) +
+  labs(tag = "Proportion of BirdNET detections (%)") +
+  theme(plot.tag = element_text(size = 16, angle = 90),
+        plot.tag.position = "left")
+
+
+level_patch <- (g1_list$g1[[19]] | g1_list$g1[[7]]) / (g1_list$g1[[2]] | g1_list$g1[[15]]) &
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.margin = margin(5.5, 5.5, 5.5, 5.5)) &
+  ylab(NULL)
+
+wrap_elements(level_patch) +
+  labs(tag = "Proportion of BirdNET detections (%)") +
+  theme(plot.tag = element_text(size = 16, angle = 90),
+        plot.tag.position = "left")
 
 # Others ------------------------------------------------------------------
 species_vector <- test1 %>% 
