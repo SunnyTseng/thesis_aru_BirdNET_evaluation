@@ -7,19 +7,17 @@
 ### Output: a tidy dataframe with BirdNET output from single season
 ###
 
+# Library -----------------------------------------------------------------
 
-###
-### Library
-###
 library(tidyverse)
 library(purrr)
 library(here)
 library(janitor)
 
 
-###
-### Main function here
-###
+
+# Function ----------------------------------------------------------------
+
 group_BirdNET_output <- function(year, season, data_folder){
   
   # list the files
@@ -52,9 +50,8 @@ return(data_full_format)
 }
 
 
-###
-### Example code
-###
+# Example usage -----------------------------------------------------------
+
 
 final <- group_BirdNET_output(year = 2022, season = "passerine", data_folder = "data/Audio_output")
 write_csv(final, here("data", "processed", "2022_passerine_BirdNET_updated.csv"))
