@@ -23,7 +23,7 @@ g1_plot <- function(data, species){
                       labels = c("False Positive", "True Positive")) +
     theme_bw() +
     labs(x = "Confidence threshold", 
-         y = "Proportion of BirdNET detections (%)") +
+         y = "Retained BirdNET detections (%)") +
     theme(axis.title = element_text(size = 16),
           axis.text = element_text(size = 12),
           legend.title = element_blank(),
@@ -37,9 +37,9 @@ g1_plot <- function(data, species){
 # Import data -------------------------------------------------------------
 
 data_validation <- list.files(here("data"), pattern = "*finished.csv") %>%
-  map_df(~read_csv(paste0("./data/", .)))
+  map_df(~ read_csv(paste0("./data/", .)))
 
-data_2020 <- read_csv(here("data", "processed", "2020_passerine_BirdNET.csv"))
+data_2020 <- read_csv(here("data", "processed", "2020_passerine_BirdNET_updated.csv"))
 data_2021 <- read_csv(here("data", "processed", "2021_passerine_BirdNET.csv"))
 data_all <- bind_rows(data_2020, data_2021) %>%
   mutate(category = cut(x = confidence, breaks = seq(0.1, 1, 0.05))) 
@@ -148,26 +148,41 @@ g1_list$g1[[19]]
 
 
 
-level_patch <- g1_list$g1[[19]] / g1_list$g1[[7]] / g1_list$g1[[15]] &
-  # plot_annotation(tag_levels = 'A') & 
-  theme(plot.margin = margin(5.5, 5.5, 5.5, 5.5)) &
-  ylab(NULL)
-
-wrap_elements(level_patch) +
-  labs(tag = "Proportion of BirdNET detections (%)") +
-  theme(plot.tag = element_text(size = 16, angle = 90),
-        plot.tag.position = "left")
-
-
 level_patch <- (g1_list$g1[[19]] | g1_list$g1[[7]]) / (g1_list$g1[[2]] | g1_list$g1[[15]]) &
   plot_annotation(tag_levels = 'A') & 
-  theme(plot.margin = margin(5.5, 5.5, 5.5, 5.5)) &
+  theme(plot.margin = margin(5.5, 5.5, 5.5, 5.5),
+        plot.tag.position = c(0, 0.98)) &
   ylab(NULL)
 
-wrap_elements(level_patch) +
-  labs(tag = "Proportion of BirdNET detections (%)") +
+level_patch_1 <- wrap_elements(level_patch) +
+  labs(tag = "Remained BirdNET detections (%)") +
   theme(plot.tag = element_text(size = 16, angle = 90),
         plot.tag.position = "left")
+
+ggsave(plot = level_patch_1,
+       filename = here("docs", "figures", "threshold_setting.png"),
+       width = 24,
+       height = 18,
+       units = "cm",
+       dpi = 300)
+
+
+
+
+# threshold setting table  ------------------------------------------------
+
+thresholds_table <- rate_loess_count %>%
+  filter(rate_loess > 0.90) %>%
+  group_by(common_name, scientific_name) %>%
+  slice_min(category_dbl) %>%
+  mutate(proportion_detection = TP_cum + FP_cum) %>%
+  select(common_name, scientific_name, from, rate_loess, proportion_detection) %>%
+  mutate(proportion_detection = round(proportion_detection, digits = 0),
+         rate_loess = round(rate_loess, digits = 2))
+  
+write_csv(thresholds_table, 
+          file = here("docs", "tables", "thresholds_table.csv"))
+
 
 # Others ------------------------------------------------------------------
 species_vector <- test1 %>% 
