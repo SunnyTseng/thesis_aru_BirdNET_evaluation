@@ -59,10 +59,11 @@ rate <- data_validation %>%
 
 coul <- brewer.pal(12, "Paired") 
 coul <- colorRampPalette(coul)(19)
-g <- ggplot(rate, aes(x = category_dbl, 
-                           y = rate, 
-                           group = common_name, 
-                           colour = common_name)) +
+
+g <- ggplot(rate, aes(x = category_dbl,
+                      y = rate,
+                      group = common_name,
+                      colour = common_name)) +
   geom_point(size = 3, 
              alpha = 0.2) +
   geom_line(stat = "smooth",
@@ -71,8 +72,8 @@ g <- ggplot(rate, aes(x = category_dbl,
             size = 1.5,
             alpha = 0.7) + 
   scale_colour_manual(values = coul) +
-  ylim(0, 1) +
-  xlim(0, 1) +
+  scale_x_continuous(limits = c(0.1, 1), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 1)) + 
   theme_bw() +
   labs(x = "BirdNET confidence", 
        y = "Proportion of true positive",
@@ -80,9 +81,21 @@ g <- ggplot(rate, aes(x = category_dbl,
   theme(axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
         legend.title = element_blank(),
-        legend.text = element_text(size = 11),
-        legend.position = "bottom")
-g
+        legend.text = element_text(size = 12),
+        legend.position = "bottom",
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+        plot.margin = margin(1, 1, 1, 1, "cm")) +
+  guides(colour = guide_legend(ncol = 4)) 
+
+
+ggsave(plot = g,
+       filename = here("docs", "figures", "calibration_curves.PNG"),
+       width = 28,
+       height = 20,
+       units = "cm", 
+       dpi = 300)
+
 
 
 # Visualization: single species  ------------------------------------------
