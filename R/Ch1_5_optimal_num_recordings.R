@@ -7,6 +7,8 @@
 # Library -----------------------------------------------------------------
 library(tidyverse)
 library(here)
+library(patchwork)
+library(png)
 
 pr <- function(data = data, n_vector = c(10, 20, 30, 40, 50)){
   pr_full <- NULL
@@ -74,10 +76,12 @@ proportion <- function(data = data, n_vector = c(5, 10, 25, 50), bootstrap = 100
 
 
 # Import data -------------------------------------------------------------
-data <- read_csv(here("data", "2020_Olive-sided Flycatcher_finished.csv"))
+data <- read_csv(here("data", 
+                      "number_evaluation",
+                      "Yellow_rumped Warbler_finished.csv"))
 
 
-# Visualization 1 ---------------------------------------------------------
+# V1: Precision recall curve ----------------------------------------------
 pr <- pr(data)
 
 g1 <- pr %>%
@@ -102,36 +106,7 @@ g1 <- pr %>%
 g1
 
 
-# Visualization 2 ---------------------------------------------------------
-pro_1 <- proportion(data = data, 
-                         n_vector = c(5, 10, 25, 50), 
-                         bootstrap = 1)
-
-g2 <- pro_1 %>%
-  mutate(num_recordings_f = as_factor(num_recordings)) %>%
-  ggplot(aes(x = category_dbl, 
-             y = rate_mean, 
-             colour = num_recordings_f,
-             group = num_recordings_f)) +
-  geom_point(aes(size = num_recordings), 
-             alpha = 0.3,
-             shape = 20) +
-  geom_line(stat = "smooth", method = "loess", 
-            se = FALSE, alpha = 0.5, size = 1.5) +
-  scale_color_manual(values = c("chartreuse4", "#E7B800", "#FC4E07", "#00AFFB")) +
-  scale_size(range = c(5, 25)) +
-  theme_bw() +
-  labs(x = "BirdNET confidence", y = "Proportion of true positive",
-       colour = "# of recordings") +
-  theme(axis.title = element_text(size = 16),
-        axis.text = element_text(size = 12),
-        #legend.position = c(0.8, 0.5),
-        legend.justification = c("left", "top"))
-g2  
-  
-
-
-# Visualization 3 ---------------------------------------------------------
+# V2: Calibration curve with confidence interval --------------------------
 pro_100 <- proportion(data = data, 
                       n_vector = c(5, 10, 25, 50), 
                       bootstrap = 100)
@@ -150,15 +125,165 @@ g3 <- pro_100 %>%
   theme_bw()
 g3  
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+# V3: Calibration curve with 1 random sampling ----------------------------
+
+
+### OSFL 
+data <- read_csv(here("data", 
+                      #"number_evaluation",
+                      "2020_Olive-sided Flycatcher_finished.csv"))
+pro_1 <- proportion(data = data, 
+                    n_vector = c(5, 10, 25, 50), 
+                    bootstrap = 1)
+g_OSFL <- pro_1 %>%
+  mutate(num_recordings_f = as_factor(num_recordings)) %>%
+  ggplot(aes(x = category_dbl, 
+             y = rate_mean, 
+             colour = num_recordings_f,
+             group = num_recordings_f)) +
+  geom_point(aes(size = num_recordings), 
+             alpha = 0.3,
+             shape = 20) +
+  geom_line(stat = "smooth", method = "loess", 
+            se = FALSE, alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("chartreuse4", "#E7B800","#FC4E07", "#00AFFB")) +
+  scale_size(range = c(5, 25)) +
+  theme_bw() +
+  theme(legend.position = "none", 
+        legend.justification = NULL,
+        legend.box.just = NULL,
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  labs(title = "Olive-sided Flycatcher",
+       x = "BirdNET confidence", 
+       y = "Proportion of true positive",
+       colour = NULL,
+       size = NULL) +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        #legend.position = c(0.8, 0.5),
+        legend.justification = c("left", "top"))
+
+
+### YRWA
+data <- read_csv(here("data", 
+                      "number_evaluation",
+                      "Yellow_rumped Warbler_finished.csv"))
+
+pro_1 <- proportion(data = data, 
+                    n_vector = c(5, 10, 25, 50), 
+                    bootstrap = 1)
+
+g_YRWA <- pro_1 %>%
+  mutate(num_recordings_f = as_factor(num_recordings)) %>%
+  ggplot(aes(x = category_dbl, 
+             y = rate_mean, 
+             colour = num_recordings_f,
+             group = num_recordings_f)) +
+  geom_point(aes(size = num_recordings), 
+             alpha = 0.3,
+             shape = 20) +
+  geom_line(stat = "smooth", method = "loess", 
+            se = FALSE, alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("chartreuse4", "#E7B800","#FC4E07", "#00AFFB")) +
+  scale_size(range = c(5, 25)) +
+  theme_bw() +
+  theme(legend.position = "none", 
+        legend.justification = NULL,
+        legend.box.just = NULL,
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  labs(title = "Yellow-rumped Warbler",
+       x = "BirdNET confidence", 
+       y = "Proportion of true positive",
+       colour = NULL,
+       size = NULL) +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        #legend.position = c(0.8, 0.5),
+        legend.justification = c("left", "top"))
+
+
+### VATH
+data <- read_csv(here("data", 
+                      "number_evaluation",
+                      "Varied Thrush_finished.csv"))
+
+pro_1 <- proportion(data = data, 
+                    n_vector = c(5, 10, 25, 50), 
+                    bootstrap = 1)
+
+g_VATH <- pro_1 %>%
+  mutate(num_recordings_f = as_factor(num_recordings)) %>%
+  ggplot(aes(x = category_dbl, 
+             y = rate_mean, 
+             colour = num_recordings_f,
+             group = num_recordings_f)) +
+  geom_point(aes(size = num_recordings), 
+             alpha = 0.3,
+             shape = 20) +
+  geom_line(stat = "smooth", method = "loess", 
+            se = FALSE, alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("chartreuse4", "#E7B800","#FC4E07", "#00AFFB")) +
+  scale_size(range = c(5, 25)) +
+  theme_bw() +
+  theme(legend.position = "none", 
+        legend.justification = NULL,
+        legend.box.just = NULL,
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  labs(title = "Varied Thrush",
+       x = "BirdNET confidence", 
+       y = "Proportion of true positive",
+       colour = NULL,
+       size = NULL) +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        #legend.position = c(0.8, 0.5),
+        legend.justification = c("left", "top"))
+
+### legend
+p_legend <- readPNG(here("docs", "figures", "number_evaluation_legend_1.PNG"),
+                    native = TRUE)
+
+# combine plot and add annotation
+patch_plot <- (g_YRWA + g_VATH & xlab(NULL))/ g_OSFL +
+  plot_annotation(tag_levels = "A") & 
+  ylab(NULL) &
+  theme(plot.margin = margin(5.5, 5.5, 5.5, 10),
+        plot.tag = element_text(size = 14),
+        plot.tag.position = c(0, 0.98)) 
+
+# add shared y axis
+patch_plot_1 <- wrap_elements(patch_plot) +
+  labs(tag = "Proportion of true positive") +
+  theme(plot.tag = element_text(size = rel(1.5), angle = 90),
+        plot.tag.position = "left")
+
+# add a legend, saved as as an image
+patch_plot_2 <- patch_plot_1 + 
+  inset_element(p = p_legend,
+                left = 0.8,
+                right = 0.95,
+                top = 0.36,
+                bottom = 0.1)
+
+# save the final plot
+ggsave(plot = patch_plot_2,
+       filename = here("docs", "figures", "number_evaluation.png"),
+       width = 25,
+       height = 22, 
+       units = "cm",
+       dpi = 300)
+
 
 
 
