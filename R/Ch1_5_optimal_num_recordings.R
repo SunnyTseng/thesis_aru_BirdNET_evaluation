@@ -255,7 +255,7 @@ p_legend <- readPNG(here("docs", "figures", "number_evaluation_legend_1.PNG"),
                     native = TRUE)
 
 # combine plot and add annotation
-patch_plot <- (g_YRWA + g_VATH & xlab(NULL))/ g_OSFL +
+patch_plot <- g_OSFL/(g_YRWA + g_VATH) +
   plot_annotation(tag_levels = "A") & 
   ylab(NULL) &
   theme(plot.margin = margin(5.5, 5.5, 5.5, 10),
@@ -271,10 +271,10 @@ patch_plot_1 <- wrap_elements(patch_plot) +
 # add a legend, saved as as an image
 patch_plot_2 <- patch_plot_1 + 
   inset_element(p = p_legend,
-                left = 0.8,
+                left = 0.75,
                 right = 0.95,
-                top = 0.36,
-                bottom = 0.1)
+                top = 0.83,
+                bottom = 0.6)
 
 # save the final plot
 ggsave(plot = patch_plot_2,
