@@ -8,6 +8,7 @@ library(data.table)
 library(here)
 library(spatstat.utils)
 library(patchwork)
+library(grid)
 library(RColorBrewer)
 
 g1_plot <- function(data, species){
@@ -23,7 +24,41 @@ g1_plot <- function(data, species){
                       labels = c("False Positive", "True Positive")) +
     theme_bw() +
     labs(x = "Confidence threshold", 
-         y = "Retained BirdNET detections (%)") +
+         y = "Remaining BirdNET detections (%)") +
+    theme(axis.title = element_text(size = 16),
+          axis.text = element_text(size = 12),
+          legend.title = element_blank(),
+          legend.text = element_text(size = 11),
+          legend.position = c(0.80, 0.80),
+          title = element_text(size = 14))
+  
+  return(g1)
+}
+
+g1_plot_1 <- function(data, species){
+  coul <- brewer.pal(10, "Set3") 
+  
+  threshold <- data %>%
+    filter(rate_loess > 0.90) %>%
+    slice_min(category_dbl) %>%
+    pull(from)
+  
+  
+  g1 <- data %>%
+    pivot_longer(cols = c(TP_cum, FP_cum), names_to = "type") %>%
+    ggplot() +
+    geom_bar(aes(fill = type, y = value, x = category_dbl), 
+             position = "stack", 
+             stat = "identity") +
+    #geom_point(aes(y = rate_cum*100, x = category_dbl)) +
+    #geom_line(aes(y = rate_cum*100, x = category_dbl)) +
+    geom_vline(xintercept = threshold, colour = "red", linetype = "dashed", linewidth = 1.2) +
+    ggtitle(species) +
+    scale_fill_manual(values = coul[c(6, 1)], 
+                      labels = c("False Positive", "True Positive")) +
+    theme_bw() +
+    labs(x = "Confidence threshold", 
+         y = "Remaining BirdNET detections (%)") +
     theme(axis.title = element_text(size = 16),
           axis.text = element_text(size = 12),
           legend.title = element_blank(),
@@ -127,7 +162,8 @@ rate_loess_count <- data_all %>%
          FP = n * (1 - rate_loess)) %>%
   group_by(common_name) %>%
   mutate(TP_cum = revcumsum(TP)/sum(n)*100,
-         FP_cum = revcumsum(FP)/sum(n)*100)
+         FP_cum = revcumsum(FP)/sum(n)*100,
+         rate_cum = TP_cum/(TP_cum + FP_cum))
 
 
 g1_list <- rate_loess_count %>%
@@ -147,20 +183,30 @@ g1_list <- rate_loess_count %>%
 g1_list$g1[[19]]
 
 
+g1_list_1 <- rate_loess_count %>%
+  group_nest(common_name, scientific_name) %>%
+  mutate(g1 = map2(.x = data, 
+                   .y = common_name, 
+                   .f =~ g1_plot_1(data = .x, species = .y)))
 
-level_patch <- (g1_list$g1[[19]] | g1_list$g1[[7]]) / (g1_list$g1[[2]] | g1_list$g1[[15]]) &
+
+level_patch <- (g1_list_1$g1[[19]] | g1_list_1$g1[[7]]) / (g1_list_1$g1[[2]] | g1_list_1$g1[[15]]) &
   plot_annotation(tag_levels = 'A') & 
-  theme(plot.margin = margin(5.5, 5.5, 5.5, 5.5),
+  theme(plot.margin = margin(5.5, 5.5, 5.5, 8),
         plot.tag.position = c(0, 0.98)) &
-  ylab(NULL)
+  ylab(NULL) &
+  xlab(NULL) 
 
-level_patch_1 <- wrap_elements(level_patch) +
-  labs(tag = "Remained BirdNET detections (%)") +
-  theme(plot.tag = element_text(size = 16, angle = 90),
-        plot.tag.position = "left")
+
+level_patch_1 <- patchwork::patchworkGrob(level_patch) %>%
+  gridExtra::grid.arrange(., 
+                          #right = grid.text("Proportion of true positives (%)", rot = -90, gp = gpar(fontsize=18)),
+                          left = grid.text("Remaining BirdNET detections (%)", rot = 90, gp = gpar(fontsize=18)), 
+                          bottom = grid.text("Confidence threshold", gp = gpar(fontsize=18)))
+
 
 ggsave(plot = level_patch_1,
-       filename = here("docs", "figures", "threshold_setting.png"),
+       filename = here("docs", "figures", "threshold_setting_1.png"),
        width = 24,
        height = 18,
        units = "cm",
