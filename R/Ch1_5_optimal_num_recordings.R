@@ -264,7 +264,7 @@ patch_plot <- g_OSFL/(g_YRWA + g_VATH) +
 
 # add shared y axis
 patch_plot_1 <- wrap_elements(patch_plot) +
-  labs(tag = "Proportion of true positive") +
+  labs(tag = "True positive rate") +
   theme(plot.tag = element_text(size = rel(1.5), angle = 90),
         plot.tag.position = "left")
 

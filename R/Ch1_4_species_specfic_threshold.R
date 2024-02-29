@@ -111,7 +111,7 @@ g <- ggplot(rate, aes(x = category_dbl,
   scale_y_continuous(limits = c(0, 1)) + 
   theme_bw() +
   labs(x = "BirdNET confidence", 
-       y = "Proportion of true positive",
+       y = "True positive rate",
        colour = "Species") +
   theme(axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
