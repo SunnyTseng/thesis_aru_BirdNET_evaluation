@@ -39,9 +39,9 @@ g1_plot_1 <- function(data, species){
   coul <- brewer.pal(10, "Set3") 
   
   threshold <- data %>%
-    filter(rate_loess > 0.90) %>%
+    filter(rate_cum > 0.90) %>%
     slice_min(category_dbl) %>%
-    pull(from)
+    pull(category_dbl)
   
   
   g1 <- data %>%
@@ -215,41 +215,31 @@ ggsave(plot = level_patch_1,
 
 
 
-# threshold setting table  ------------------------------------------------
+# threshold setting table for fixing precision ----------------------------
 
 thresholds_table <- rate_loess_count %>%
-  filter(rate_loess > 0.90) %>%
+  filter(rate_cum > 0.90) %>%
   group_by(common_name, scientific_name) %>%
   slice_min(category_dbl) %>%
   mutate(proportion_detection = TP_cum + FP_cum) %>%
-  select(common_name, scientific_name, from, rate_loess, proportion_detection) %>%
+  select(common_name, scientific_name, from, rate_cum, proportion_detection) %>%
   mutate(proportion_detection = round(proportion_detection, digits = 0),
-         rate_loess = round(rate_loess, digits = 2))
+         rate_cum = round(rate_cum, digits = 2))
   
 write_csv(thresholds_table, 
-          file = here("docs", "tables", "thresholds_table.csv"))
-
-
-# Others ------------------------------------------------------------------
-species_vector <- test1 %>% 
-  pull(common_name) %>%
-  unique()
-
-for (species in species_vector) {
-  g <- test1 %>%
-    filter(common_name == species) %>%
-    pivot_longer(cols = c(true_positive, false_positive), names_to = "type") %>%
-    ggplot() +
-    geom_bar(aes(fill = type, y = value, x = category_dbl), position = "fill", stat = "identity") +
-    geom_smooth(aes(x = category_dbl, y = rate_loess), method = "loess", se = FALSE, size = 1.2) +
-    # geom_bar(aes(y = n, x = category_dbl)) +
-    ggtitle(species) +
-    theme_bw()
-  
-  print(g)
-}
+          file = here("docs", "tables", "thresholds_table_1.csv"))
 
 
 
+# precision evaluation for fixed threshold --------------------------------
+precision_table <- rate_loess_count %>%
+  filter(from == 0.7) %>%
+  mutate(proportion_detection = TP_cum + FP_cum) %>%
+  select(common_name, scientific_name, from, rate_cum, proportion_detection) %>%
+  mutate(proportion_detection = round(proportion_detection, digits = 0),
+         rate_cum = round(rate_cum, digits = 2))
+
+write_csv(precision_table, 
+          file = here("docs", "tables", "precision_table.csv"))
 
 
