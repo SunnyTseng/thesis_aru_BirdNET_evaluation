@@ -131,7 +131,6 @@ g3
 
 # V3: Calibration curve with 1 random sampling ----------------------------
 
-
 ### OSFL 
 data <- read_csv(here("data", 
                       #"number_evaluation",
@@ -150,7 +149,7 @@ g_OSFL <- pro_1 %>%
              shape = 20) +
   geom_line(stat = "smooth", method = "loess", 
             se = FALSE, alpha = 0.5, size = 1.5) +
-  scale_color_manual(values = c("chartreuse4", "#E7B800","#FC4E07", "#00AFFB")) +
+  scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
   theme_bw() +
   theme(legend.position = "none", 
@@ -161,8 +160,8 @@ g_OSFL <- pro_1 %>%
         axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
         axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   labs(title = "Olive-sided Flycatcher",
-       x = "BirdNET confidence", 
-       y = "Proportion of true positive",
+       x = NULL, 
+       y = NULL,
        colour = NULL,
        size = NULL) +
   theme(axis.title = element_text(size = 16),
@@ -191,7 +190,7 @@ g_YRWA <- pro_1 %>%
              shape = 20) +
   geom_line(stat = "smooth", method = "loess", 
             se = FALSE, alpha = 0.5, size = 1.5) +
-  scale_color_manual(values = c("chartreuse4", "#E7B800","#FC4E07", "#00AFFB")) +
+  scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
   theme_bw() +
   theme(legend.position = "none", 
@@ -202,8 +201,8 @@ g_YRWA <- pro_1 %>%
         axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
         axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   labs(title = "Yellow-rumped Warbler",
-       x = "BirdNET confidence", 
-       y = "Proportion of true positive",
+       x = NULL, 
+       y = NULL,
        colour = NULL,
        size = NULL) +
   theme(axis.title = element_text(size = 16),
@@ -232,7 +231,7 @@ g_VATH <- pro_1 %>%
              shape = 20) +
   geom_line(stat = "smooth", method = "loess", 
             se = FALSE, alpha = 0.5, size = 1.5) +
-  scale_color_manual(values = c("chartreuse4", "#E7B800","#FC4E07", "#00AFFB")) +
+  scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
   theme_bw() +
   theme(legend.position = "none", 
@@ -244,7 +243,7 @@ g_VATH <- pro_1 %>%
         axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   labs(title = "Varied Thrush",
        x = "BirdNET confidence", 
-       y = "Proportion of true positive",
+       y = NULL,
        colour = NULL,
        size = NULL) +
   theme(axis.title = element_text(size = 16),
@@ -257,32 +256,32 @@ p_legend <- readPNG(here("docs", "figures", "number_evaluation_legend_1.PNG"),
                     native = TRUE)
 
 # combine plot and add annotation
-patch_plot <- g_OSFL/(g_YRWA + g_VATH) +
-  plot_annotation(tag_levels = "A") & 
-  ylab(NULL) &
-  theme(plot.margin = margin(5.5, 5.5, 5.5, 10),
-        plot.tag = element_text(size = 14),
-        plot.tag.position = c(0, 0.98)) 
+patch_plot <- (g_YRWA / g_OSFL / g_VATH) +
+  plot_annotation(tag_levels = "A") &
+  theme(plot.margin = margin(2, 2, 2, 5),
+        plot.tag = element_text(size = 14))
 
 # add shared y axis
 patch_plot_1 <- wrap_elements(patch_plot) +
   labs(tag = "True positive rate") +
   theme(plot.tag = element_text(size = rel(1.5), angle = 90),
-        plot.tag.position = "left")
+        plot.tag.position = "left") 
 
 # add a legend, saved as as an image
 patch_plot_2 <- patch_plot_1 + 
   inset_element(p = p_legend,
                 left = 0.75,
                 right = 0.95,
-                top = 0.83,
-                bottom = 0.6)
+                top = 0.87,
+                bottom = 0.72)
+
+patch_plot_2
 
 # save the final plot
 ggsave(plot = patch_plot_2,
-       filename = here("docs", "figures", "number_evaluation.png"),
-       width = 25,
-       height = 22, 
+       filename = here("docs", "figures", "number_evaluation_1.png"),
+       width = 20,
+       height = 26, 
        units = "cm",
        dpi = 300)
 
