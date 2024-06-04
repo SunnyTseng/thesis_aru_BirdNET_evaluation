@@ -1,8 +1,8 @@
 ###
 ### Author: Sunny, 2023 Aug 24
-### Question: What's the min recordings one should select to achieve similar threshold result? 
+### Question: What's the min recordings one should select to achieve similar 
+### threshold result? 
 ###
-### 
 
 # Library -----------------------------------------------------------------
 library(tidyverse)
@@ -38,6 +38,8 @@ pr <- function(data = data, n_vector = c(10, 20, 30, 40, 50)){
   
   return(pr_full)
 }
+
+
 proportion <- function(data = data, n_vector = c(5, 10, 25, 50), bootstrap = 100){
   set.seed(70)
   data_proportion_2 <- NULL

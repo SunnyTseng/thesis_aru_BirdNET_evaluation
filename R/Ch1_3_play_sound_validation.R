@@ -20,7 +20,7 @@ library(here)
 # Play sound --------------------------------------------------------------
 
 dir <- "E:/Audio"
-dataset <- read_csv(here("data", "number_evaluation", "Yellow_rumped Warbler_working.csv"))
+dataset <- read_csv(here("data", "number_evaluation", "Yellow_rumped Warbler_finished.csv"))
 
 range <- 801:900
 for (i in range) {
