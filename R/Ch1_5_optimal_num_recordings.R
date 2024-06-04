@@ -252,7 +252,7 @@ g_VATH <- pro_1 %>%
         legend.justification = c("left", "top"))
 
 ### legend
-p_legend <- readPNG(here("docs", "figures", "number_evaluation_legend_1.PNG"),
+p_legend <- readPNG(here("docs", "figures", "number_evaluation_legend_2.PNG"),
                     native = TRUE)
 
 # combine plot and add annotation
@@ -279,7 +279,7 @@ patch_plot_2
 
 # save the final plot
 ggsave(plot = patch_plot_2,
-       filename = here("docs", "figures", "number_evaluation_1.png"),
+       filename = here("docs", "figures", "number_evaluation.png"),
        width = 20,
        height = 26, 
        units = "cm",
