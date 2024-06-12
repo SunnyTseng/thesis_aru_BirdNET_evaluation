@@ -90,7 +90,7 @@ rate <- data_validation %>%
   mutate(from = str_extract(from, pattern = "[^\\(]+") %>% as.numeric(),
          to = str_extract(to, pattern = "[^\\]]+") %>% as.numeric()) %>%
   mutate(category_dbl = (from + to)/2) %>%
-  select(common_name, scientific_name, category_dbl, rate)
+  select(-data)
 
 coul <- brewer.pal(12, "Paired") 
 coul <- colorRampPalette(coul)(19)
@@ -104,7 +104,7 @@ g <- ggplot(rate, aes(x = category_dbl,
   geom_line(stat = "smooth",
             method = "loess", # span is 0.75 by default
             se = FALSE, 
-            size = 1.5,
+            linewidth = 1.5,
             alpha = 0.7) + 
   scale_colour_manual(values = coul) +
   scale_x_continuous(limits = c(0.1, 1), expand = c(0, 0)) +
@@ -135,13 +135,7 @@ ggsave(plot = g,
 
 # Visualization: single species  ------------------------------------------
 
-rate_loess <- data_validation %>%
-  group_nest(common_name, scientific_name, category) %>%
-  mutate(rate = map_dbl(.x = data, .f =~ sum(.x$observed == "Y")/nrow(.x))) %>%
-  separate(col = category, into = c("from", "to"), sep = ",") %>%
-  mutate(from = str_extract(from, pattern = "[^\\(]+") %>% as.numeric(),
-         to = str_extract(to, pattern = "[^\\]]+") %>% as.numeric()) %>%
-  mutate(category_dbl = (from + to)/2) %>%
+rate_loess <- rate %>%
   group_nest(common_name) %>%
   mutate(rate_loess = map(.x = data, .f =~ loess(rate ~ category_dbl, data = .x) %>%
                             predict() %>%
@@ -157,12 +151,12 @@ rate_loess_count <- data_all %>%
          to = str_extract(to, pattern = "[^\\]]+") %>% as.numeric()) %>%
   mutate(category_dbl = (from + to)/2) %>%
   left_join(rate_loess) %>%
-  drop_na(rate_loess) %>% 
+  drop_na(rate_loess) %>% # to keep only target species
   mutate(TP = n * rate_loess,
          FP = n * (1 - rate_loess)) %>%
   group_by(common_name) %>%
-  mutate(TP_cum = revcumsum(TP)/sum(n)*100,
-         FP_cum = revcumsum(FP)/sum(n)*100,
+  mutate(TP_cum = revcumsum(TP)/sum(n)*100, # total number of true positives after applying threshold
+         FP_cum = revcumsum(FP)/sum(n)*100, # total number of false positives after applying threshold
          rate_cum = TP_cum/(TP_cum + FP_cum))
 
 
@@ -217,29 +211,31 @@ ggsave(plot = level_patch_1,
 
 # threshold setting table for fixing precision ----------------------------
 
-thresholds_table <- rate_loess_count %>%
+thresholds_table_s2 <- rate_loess_count %>%
   filter(rate_cum > 0.90) %>%
   group_by(common_name, scientific_name) %>%
   slice_min(category_dbl) %>%
   mutate(proportion_detection = TP_cum + FP_cum) %>%
   select(common_name, scientific_name, from, rate_cum, proportion_detection) %>%
   mutate(proportion_detection = round(proportion_detection, digits = 0),
-         rate_cum = round(rate_cum, digits = 2))
+         rate_cum = round(rate_cum, digits = 2)) %>%
+  arrange(from, rate_cum, proportion_detection)
   
-write_csv(thresholds_table, 
-          file = here("docs", "tables", "thresholds_table_1.csv"))
+write_csv(thresholds_table_s2, 
+          file = here("docs", "tables", "thresholds_table_s2.csv"))
 
 
 
 # precision evaluation for fixed threshold --------------------------------
-precision_table <- rate_loess_count %>%
+thresholds_table_s1 <- rate_loess_count %>%
   filter(from == 0.7) %>%
   mutate(proportion_detection = TP_cum + FP_cum) %>%
   select(common_name, scientific_name, from, rate_cum, proportion_detection) %>%
   mutate(proportion_detection = round(proportion_detection, digits = 0),
-         rate_cum = round(rate_cum, digits = 2))
+         rate_cum = round(rate_cum, digits = 2)) %>%
+  arrange(from, desc(rate_cum), proportion_detection)
 
-write_csv(precision_table, 
-          file = here("docs", "tables", "precision_table.csv"))
+write_csv(thresholds_table_s1, 
+          file = here("docs", "tables", "thresholds_table_s1.csv"))
 
 
