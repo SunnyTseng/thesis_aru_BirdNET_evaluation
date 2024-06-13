@@ -15,6 +15,9 @@ library(ohun)
 library(warbleR)
 library(soundecology)
 
+library(RColorBrewer)
+library(patchwork)
+
 
 # functions ---------------------------------------------------------------
 
@@ -114,6 +117,8 @@ metric_values <- function(data, dir) {
   return(detection_full)
 }
 
+
+
 # prepare acoustic data ---------------------------------------------------
 
 # import data
@@ -162,9 +167,13 @@ bird_data_target <- bird_data %>%
 #
 # save(aci_values_target, file = here("R", "aci_values_target.rda"))
 
+
+
+# make a table to show ACI values between species -------------------------
+
 load(here("R", "aci_values_target.rda"))
 
-aci_stats_target <- aci_values_target %>%
+aci_table <- aci_values_target %>%
   mutate(mean_aci = map_dbl(.x = aci, .f =~ mean(.x)),
          se_aci = map_dbl(.x = aci, .f =~ sd(.x)/50)) %>%
   select(-data, -aci) %>%
@@ -185,27 +194,85 @@ aci_stats_target <- aci_values_target %>%
 # 
 # save(complexity_metrics, file = here("R", "complexity_metrics.rda"))
 
+
+
+# plot the complexity metrics between species -----------------------------
+
 load(here("R", "complexity_metrics.rda"))
 
-test <- ggbetweenstats(
-  data = complexity_metrics,
-  x = common_name,
-  y = duration.x
-)
+coul <- brewer.pal(12, "Paired") 
+coul <- colorRampPalette(coul)(19)
+
+## For duration
+duration_plot <- complexity_metrics %>%
+  ggplot(aes(x = reorder(common_name, bandwidth), 
+             y = duration.x,
+             colour = common_name)) +
+  geom_boxplot(size = 1, alpha = 0.4) +
+  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
+  scale_colour_manual(values = coul) +
+  scale_y_continuous(limits = c(0, 7)) + 
+  coord_flip() +
+  theme_bw() +
+  labs(x = NULL, 
+       y = "Duration (s)") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.x = element_text(margin = margin(t = 5)),
+        legend.position = "none",
+        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
+
+## For bandwidth
+bandwidth_plot <- complexity_metrics %>%
+  ggplot(aes(x = reorder(common_name, bandwidth), 
+             y = bandwidth,
+             colour = common_name)) +
+  geom_boxplot(size = 1, alpha = 0.4) +
+  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
+  scale_colour_manual(values = coul) +
+  scale_y_continuous(limits = c(0, 7)) + 
+  coord_flip() +
+  theme_bw() +
+  labs(x = NULL, 
+       y = "Bandwidth (kHz)") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.x = element_text(margin = margin(t = 5)),
+        legend.position = "none",
+        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
+
+## For inflections
+inflections_plot <- complexity_metrics %>%
+  ggplot(aes(x = reorder(common_name, bandwidth), 
+             y = inflections,
+             colour = common_name)) +
+  geom_boxplot(size = 1, alpha = 0.4) +
+  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
+  scale_colour_manual(values = coul) +
+  scale_y_continuous(limits = c(0, 17)) + 
+  coord_flip() +
+  theme_bw() +
+  labs(x = NULL, 
+       y = "No. of inflections") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.x = element_text(margin = margin(t = 5)),
+        legend.position = "none",
+        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
+
+## combine all plots
+
+complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
+  #plot_annotation(tag_levels = "A") +
+  plot_layout(axes = "collect")
 
 
-metrics_plot <- complexity_metrics %>%
-  pivot_longer(names_to = "metrics", 
-               cols = c(duration.x, inflections, bandwidth)) %>%
-  ggplot(aes(x = common_name, y = value)) +
-  geom_boxplot() +
-  geom_jitter() +
-  
-  
-metrics_plot
-
-
-
+ggsave(plot = complexity_plot,
+       filename = here("docs", "figures", "complexity_plot.png"),
+       width = 32,
+       height = 22,
+       units = "cm",
+       dpi = 300)
 
 
 

@@ -52,7 +52,14 @@ g1_plot_1 <- function(data, species){
              stat = "identity") +
     #geom_point(aes(y = rate_cum*100, x = category_dbl)) +
     #geom_line(aes(y = rate_cum*100, x = category_dbl)) +
-    geom_vline(xintercept = threshold, colour = "red", linetype = "dashed", linewidth = 1.2) +
+    geom_segment(x = threshold, y = 30, xend = threshold, yend = 10, 
+                 colour = "red", linewidth = 1.2, size = 1,
+                 arrow = arrow(length = unit(0.1, "inches"))) + 
+    geom_segment(x = 0.725, y = 30, xend = 0.725, yend = 10, 
+                 colour = "slateblue4", linewidth = 1.2, size = 1,
+                 arrow = arrow(length = unit(0.1, "inches"))) + 
+    # geom_vline(xintercept = threshold, colour = "red", linetype = "dashed", linewidth = 1.2) +
+    # geom_vline(xintercept = 0.75, colour = "grey", linetype = "dashed", linewidth = 1.2) +
     ggtitle(species) +
     scale_fill_manual(values = coul[c(6, 1)], 
                       labels = c("False Positive", "True Positive")) +
@@ -198,9 +205,8 @@ level_patch_1 <- patchwork::patchworkGrob(level_patch) %>%
                           left = grid.text("Remaining BirdNET detections (%)", rot = 90, gp = gpar(fontsize=18)), 
                           bottom = grid.text("Confidence threshold", gp = gpar(fontsize=18)))
 
-
 ggsave(plot = level_patch_1,
-       filename = here("docs", "figures", "threshold_setting_1.png"),
+       filename = here("docs", "figures", "threshold_setting.png"),
        width = 24,
        height = 18,
        units = "cm",
