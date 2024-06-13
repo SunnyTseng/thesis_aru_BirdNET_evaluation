@@ -227,8 +227,8 @@ thresholds_table_s2 <- rate_loess_count %>%
          rate_cum = round(rate_cum, digits = 2)) %>%
   arrange(from, rate_cum, proportion_detection)
   
-write_csv(thresholds_table_s2, 
-          file = here("docs", "tables", "thresholds_table_s2.csv"))
+# write_csv(thresholds_table_s2, 
+#           file = here("docs", "tables", "thresholds_table_s2.csv"))
 
 
 
@@ -241,7 +241,7 @@ thresholds_table_s1 <- rate_loess_count %>%
          rate_cum = round(rate_cum, digits = 2)) %>%
   arrange(from, desc(rate_cum), proportion_detection)
 
-write_csv(thresholds_table_s1, 
-          file = here("docs", "tables", "thresholds_table_s1.csv"))
+# write_csv(thresholds_table_s1, 
+#           file = here("docs", "tables", "thresholds_table_s1.csv"))
 
 

@@ -17,6 +17,7 @@ library(soundecology)
 
 library(RColorBrewer)
 library(patchwork)
+library(smplot2)
 
 
 # functions ---------------------------------------------------------------
@@ -267,14 +268,22 @@ complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
   plot_layout(axes = "collect")
 
 
-ggsave(plot = complexity_plot,
-       filename = here("docs", "figures", "complexity_plot.png"),
-       width = 32,
-       height = 22,
-       units = "cm",
-       dpi = 300)
+# ggsave(plot = complexity_plot,
+#        filename = here("docs", "figures", "complexity_plot.png"),
+#        width = 32,
+#        height = 22,
+#        units = "cm",
+#        dpi = 300)
 
 
+
+# others ------------------------------------------------------------------
+
+test <- complexity_metrics %>%
+  left_join(thresholds_table_s1, by = join_by(common_name, scientific_name)) %>%
+  ggplot(aes(x = duration.x, y = rate_cum)) + 
+  geom_point() +
+  sm_statCorr()
 
 
 
