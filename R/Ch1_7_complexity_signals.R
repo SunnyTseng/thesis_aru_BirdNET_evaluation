@@ -277,15 +277,6 @@ complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
 
 
 
-# others ------------------------------------------------------------------
-
-test <- complexity_metrics %>%
-  left_join(thresholds_table_s1, by = join_by(common_name, scientific_name)) %>%
-  ggplot(aes(x = duration.x, y = rate_cum)) + 
-  geom_point() +
-  sm_statCorr()
-
-
 
 
 
