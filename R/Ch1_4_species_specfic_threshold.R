@@ -230,6 +230,7 @@ thresholds_table_s2 <- rate_loess_count %>%
 # write_csv(thresholds_table_s2, 
 #           file = here("docs", "tables", "thresholds_table_s2.csv"))
 
+# save(thresholds_table_s2, file = here("R", "thresholds_table_s2.rda"))
 
 
 # precision evaluation for fixed threshold --------------------------------
@@ -243,7 +244,5 @@ thresholds_table_s1 <- rate_loess_count %>%
 
 # write_csv(thresholds_table_s1, 
 #           file = here("docs", "tables", "thresholds_table_s1.csv"))
-
-
 
 

@@ -120,7 +120,7 @@ metric_values <- function(data, dir) {
 
 
 
-# prepare acoustic data ---------------------------------------------------
+# data preparation -------------------------------------------------------
 
 # import data
 data_2020 <- read_csv(here("data", "processed", paste0(2020, "_passerine_BirdNET_updated.csv")))
@@ -159,7 +159,7 @@ bird_data_target <- bird_data %>%
 
 
 
-# calculation of the ACI --------------------------------------------------
+# ACI calculation ---------------------------------------------------------
 
 # aci_values_target <- bird_data_target %>%
 #   group_nest(common_name, scientific_name) %>%
@@ -170,7 +170,7 @@ bird_data_target <- bird_data %>%
 
 
 
-# make a table to show ACI values between species -------------------------
+# ACI table ---------------------------------------------------------------
 
 load(here("R", "aci_values_target.rda"))
 
@@ -182,7 +182,7 @@ aci_table <- aci_values_target %>%
 
 
 
-# calculation of the metrics for the sound --------------------------------
+# complexity metrics calculation --------------------------------
 
 # metrics_values_target <- bird_data_target %>%
 #   group_nest(common_name, scientific_name) %>%
@@ -197,7 +197,7 @@ aci_table <- aci_values_target %>%
 
 
 
-# plot the complexity metrics between species -----------------------------
+# complexity metrics plot -----------------------------
 
 load(here("R", "complexity_metrics.rda"))
 
@@ -274,6 +274,104 @@ complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
 #        height = 22,
 #        units = "cm",
 #        dpi = 300)
+
+
+# correlation between complexity and performance --------------------------
+
+load(here("R", "complexity_metrics.rda"))
+load(here("R", "thresholds_table_s2.rda"))
+
+complexity_cor <- complexity_metrics %>%
+  left_join(thresholds_table_s2, by = join_by(common_name, scientific_name)) %>%
+mutate(common_name = factor(common_name, levels = rev(thresholds_table_s2$common_name)))
+
+coul <- brewer.pal(12, "Paired") 
+coul <- colorRampPalette(coul)(19)
+
+## For duration
+duration_plot <- complexity_cor %>%
+  ggplot(aes(x = common_name, 
+             y = duration.x,
+             colour = common_name)) +
+  geom_boxplot(size = 1, alpha = 0.4) +
+  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
+  scale_colour_manual(values = coul) +
+  scale_y_continuous(limits = c(0, 7)) + 
+  coord_flip() +
+  theme_bw() +
+  labs(x = NULL, 
+       y = "Duration (s)") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.x = element_text(margin = margin(t = 5)),
+        legend.position = "none",
+        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
+
+## For bandwidth
+bandwidth_plot <- complexity_cor %>%
+  ggplot(aes(x = common_name, 
+             y = bandwidth,
+             colour = common_name)) +
+  geom_boxplot(size = 1, alpha = 0.4) +
+  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
+  scale_colour_manual(values = coul) +
+  scale_y_continuous(limits = c(0, 7)) + 
+  coord_flip() +
+  theme_bw() +
+  labs(x = NULL, 
+       y = "Bandwidth (kHz)") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.x = element_text(margin = margin(t = 5)),
+        legend.position = "none",
+        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
+
+## For inflections
+inflections_plot <- complexity_cor %>%
+  ggplot(aes(x = common_name, 
+             y = inflections,
+             colour = common_name)) +
+  geom_boxplot(size = 1, alpha = 0.4) +
+  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
+  scale_colour_manual(values = coul) +
+  scale_y_continuous(limits = c(0, 17)) + 
+  coord_flip() +
+  theme_bw() +
+  labs(x = NULL, 
+       y = "No. of inflections") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.x = element_text(margin = margin(t = 5)),
+        legend.position = "none",
+        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
+
+## combine all plots
+
+complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
+  #plot_annotation(tag_levels = "A") +
+  plot_layout(axes = "collect")
+
+complexity_plot
+
+ggsave(plot = complexity_plot,
+       filename = here("docs", "figures", "complexity_plot.png"),
+       width = 32,
+       height = 22,
+       units = "cm",
+       dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
