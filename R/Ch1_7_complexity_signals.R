@@ -111,7 +111,7 @@ metric_values <- function(data, dir) {
       left_join(inflections, by = join_by(sound.files == sound.files, selec == selec)) %>%
       left_join(bandwidth, by = join_by(sound.files == sound.files, selec == selec)) %>%
       select(duration.x, inflections, bandwidth) %>%
-      summarise(across(1:3, mean))
+      summarise(across(1:3, mean, na.rm = TRUE))
     
     detection_full <- bind_rows(detection_full, detection_recording)
   }
@@ -187,13 +187,12 @@ aci_table <- aci_values_target %>%
 # metrics_values_target <- bird_data_target %>%
 #   group_nest(common_name, scientific_name) %>%
 #   mutate(metrics = map(.x = data, .f =~ metric_values(data = .x, dir = "E:/Audio")))
-#   
 # 
 # complexity_metrics <- metrics_values_target %>%
 #   select(-data) %>%
-#   unnest(metrics)  
+#   unnest(metrics)
 # 
-# save(complexity_metrics, file = here("R", "complexity_metrics.rda"))
+# save(complexity_metrics, file = here("R", "complexity_metrics_1.rda"))
 
 
 
@@ -278,7 +277,7 @@ complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
 
 # correlation between complexity and performance --------------------------
 
-load(here("R", "complexity_metrics.rda"))
+load(here("R", "complexity_metrics_1.rda"))
 load(here("R", "thresholds_table_s2.rda"))
 
 complexity_cor <- complexity_metrics %>%
