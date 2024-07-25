@@ -46,6 +46,6 @@ return(data_full)
 # Example usage -----------------------------------------------------------
 
 
- # data_full <- group_BirdNET_output(path = "F:/PhD thesis/data/Audio_output/2023_passerine_BirdNET_V2.4_C0.1")
- # write_csv(data_full, paste0("F:/PhD thesis/data/Audio_output_combined/", "2023_passerine_BirdNET_V2.4_C0.1.csv"))
+data_full <- group_BirdNET_output(path = "F:/PhD thesis/data/Audio_output/2023_passerine_BirdNET_V2.4_C0.1")
+write_csv(data_full, paste0("F:/PhD thesis/data/Audio_output_combined/", "2023_passerine_BirdNET_V2.4_C0.1.csv"))
 
