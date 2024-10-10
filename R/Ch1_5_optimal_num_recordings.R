@@ -151,6 +151,7 @@ g_OSFL <- pro_1 %>%
             se = FALSE, alpha = 0.5, size = 1.5) +
   scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
+  scale_x_continuous(breaks = seq(0.1, 1, by = 0.3)) +
   theme_bw() +
   theme(legend.position = "none", 
         legend.justification = NULL,
@@ -192,6 +193,7 @@ g_YRWA <- pro_1 %>%
             se = FALSE, alpha = 0.5, size = 1.5) +
   scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
+  scale_x_continuous(breaks = seq(0.1, 1, by = 0.3)) +
   theme_bw() +
   theme(legend.position = "none", 
         legend.justification = NULL,
@@ -233,6 +235,7 @@ g_VATH <- pro_1 %>%
             se = FALSE, alpha = 0.5, size = 1.5) +
   scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
+  scale_x_continuous(breaks = seq(0.1, 1, by = 0.3)) +
   theme_bw() +
   theme(legend.position = "none", 
         legend.justification = NULL,
@@ -270,16 +273,16 @@ patch_plot_1 <- wrap_elements(patch_plot) +
 # add a legend, saved as as an image
 patch_plot_2 <- patch_plot_1 + 
   inset_element(p = p_legend,
-                left = 0.75,
+                left = 0.65,
                 right = 0.95,
-                top = 0.87,
-                bottom = 0.72)
+                top = 0.88,
+                bottom = 0.73)
 
 patch_plot_2
 
 # save the final plot
 ggsave(plot = patch_plot_2,
-       filename = here("docs", "figures", "number_evaluation.png"),
+       filename = here("docs", "figures", "number_evaluation_1.png"),
        width = 20,
        height = 26, 
        units = "cm",

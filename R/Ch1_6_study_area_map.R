@@ -11,7 +11,8 @@ library(ggspatial) ## to add features on the map
 library(bcmaps) ## to get the outline of the BC maps
 library(cowplot) ## to combine plots
 
-library(leaflet)
+library(png) ## to read in legend image
+library(patchwork) ## to combine plots
 
 # load files --------------------------------------------------------------
 
@@ -55,8 +56,8 @@ basemap <- get_stadiamap(bbox = c(left = extent[[1]] - 0.1,
                          maptype = "alidade_smooth")
 
 main <- ggmap(basemap) + 
-  geom_spatvector(data = grid_JPRF, inherit.aes = F, alpha = 0.1, fill = "firebrick1") +
-  geom_spatvector(data = grid_North, inherit.aes = F, alpha = 0.1, fill = "firebrick1") +
+  geom_spatvector(data = grid_JPRF, inherit.aes = F, alpha = 0.1, fill = "lightgoldenrod3") +
+  geom_spatvector(data = grid_North, inherit.aes = F, alpha = 0.1, fill = "lightgoldenrod3") +
   geom_spatvector(data = sites, inherit.aes = F) +
   theme_void() +
   # scale bar:
@@ -85,16 +86,16 @@ plot(as.polygons(aoi), add = T)
 
 inset <- ggplot() +
   geom_spatvector(data = bc, inherit.aes = F,
-                  fill = "forestgreen", colour = "black", alpha = 0.2) +
-  geom_spatvector(data = aoi, fill = "red",
-                  colour = "red", 
+                  fill = "lightblue4", colour = "black") +
+  geom_spatvector(data = aoi, fill = "lightgoldenrod1",
+                  colour = "lightgoldenrod1", 
                   lwd = 1) + 
   theme_void() +
   theme(panel.background=element_rect(fill = "transparent", colour="antiquewhite4"))
 
 # combine main map with inset map -----------------------------------------
 
-p_legend <- readPNG(here("docs", "figures", "study_site_map_legend_1.PNG"),
+p_legend <- readPNG(here("docs", "figures", "study_site_map_legend_2.PNG"),
                     native = TRUE)
 
 final_map <- ggdraw() +
@@ -107,8 +108,10 @@ final_map <- ggdraw() +
                 bottom = 0.18) +
   theme(rect = element_rect(fill = "transparent", colour = "transparent"))
 
+final_map
+
 ggsave(final_map,
-       filename = here("docs", "figures", "study_site_map.png"),
+       filename = here("docs", "figures", "study_site_map_1.png"),
        width = 24,
        height = 16,
        units = "cm",
