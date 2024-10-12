@@ -4,6 +4,8 @@ library(tidyverse)
 library(here)
 library(gt)
 
+library(RColorBrewer)
+
 
 # load data ---------------------------------------------------------------
 load(here("R", "rate_loess_count.rda"))
@@ -71,3 +73,4 @@ threshold_plot <- thresholds_table_s2 %>%
         legend.position = "none",
         plot.margin = margin(0.3, 0.3, 0.3, 0.3, "cm"))
 
+threshold_plot

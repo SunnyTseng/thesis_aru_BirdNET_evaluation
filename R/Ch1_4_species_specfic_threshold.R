@@ -140,7 +140,7 @@ ggsave(plot = g,
 
 
 
-# Visualization: single species  ------------------------------------------
+# data preparation --------------------------------------------------------
 
 rate_loess <- rate %>%
   group_nest(common_name) %>%
@@ -167,29 +167,65 @@ rate_loess_count <- data_all %>%
          rate_cum = TP_cum/(TP_cum + FP_cum))
 
 
+
+# Visualization: single species  ------------------------------------------
+
 g1_list <- rate_loess_count %>%
-  group_nest(common_name, scientific_name) %>%
-  mutate(g1 = map2(.x = data, .y = common_name, .f =~ g1_plot(data = .x, species = .y)))
-
-
-(g1_list$g1[[1]] | g1_list$g1[[2]] | g1_list$g1[[3]]) / 
-  (g1_list$g1[[4]] | g1_list$g1[[5]] | g1_list$g1[[6]])
-
-(g1_list$g1[[7]] | g1_list$g1[[8]] | g1_list$g1[[9]]) / 
-  (g1_list$g1[[10]] | g1_list$g1[[11]] | g1_list$g1[[12]])
-
-(g1_list$g1[[13]] | g1_list$g1[[14]] | g1_list$g1[[15]]) / 
-  (g1_list$g1[[16]] | g1_list$g1[[17]] | g1_list$g1[[18]])
-
-g1_list$g1[[19]]
-
-
-g1_list_1 <- rate_loess_count %>%
   group_nest(common_name, scientific_name) %>%
   mutate(g1 = map2(.x = data, 
                    .y = common_name, 
                    .f =~ g1_plot_1(data = .x, species = .y)))
 
+
+S1 <- (g1_list$g1[[1]] | g1_list$g1[[2]] | g1_list$g1[[3]]) / 
+  (g1_list$g1[[4]] | g1_list$g1[[5]] | g1_list$g1[[6]])
+
+S2 <- (g1_list$g1[[7]] | g1_list$g1[[8]] | g1_list$g1[[9]]) / 
+  (g1_list$g1[[10]] | g1_list$g1[[11]] | g1_list$g1[[12]])
+
+S3 <- (g1_list$g1[[13]] | g1_list$g1[[14]] | g1_list$g1[[15]]) / 
+  (g1_list$g1[[16]] | g1_list$g1[[17]] | g1_list$g1[[18]])
+
+S4 <- g1_list$g1[[19]]
+
+
+## adjust the plot
+level_patch <- S3 & # rotating between S1, S2 and S3
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.margin = margin(5.5, 5.5, 5.5, 8),
+        plot.tag.position = c(0, 0.98)) &
+  ylab(NULL) &
+  xlab(NULL) 
+
+level_patch_1 <- patchwork::patchworkGrob(level_patch) %>%
+  gridExtra::grid.arrange(., 
+                          #right = grid.text("Proportion of true positives (%)", rot = -90, gp = gpar(fontsize=18)),
+                          left = grid.text("Remaining BirdNET detections (%)", rot = 90, gp = gpar(fontsize=18)), 
+                          bottom = grid.text("Confidence threshold", gp = gpar(fontsize=18)))
+
+## save the plot
+ggsave(plot = level_patch_1,
+       ## entering between S1, S2 and S3
+       filename = here("docs", "figures", "threshold_setting_S3.png"),
+       width = 34,
+       height = 18,
+       units = "cm",
+       dpi = 300)
+
+
+ggsave(plot = S4,
+       filename = here("docs", "figures", "threshold_setting_S4.png"),
+       width = 18,
+       height = 10,
+       units = "cm",
+       dpi = 300)
+
+# multiple species comparision --------------------------------------------
+g1_list_1 <- rate_loess_count %>%
+  group_nest(common_name, scientific_name) %>%
+  mutate(g1 = map2(.x = data, 
+                   .y = common_name, 
+                   .f =~ g1_plot_1(data = .x, species = .y)))
 
 level_patch <- (g1_list_1$g1[[19]] | g1_list_1$g1[[7]]) / (g1_list_1$g1[[2]] | g1_list_1$g1[[15]]) &
   plot_annotation(tag_levels = 'A') & 
