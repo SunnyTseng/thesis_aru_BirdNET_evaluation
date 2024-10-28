@@ -1,6 +1,3 @@
-
-
-
 # Library -----------------------------------------------------------------
 
 library(tidyverse)
@@ -11,38 +8,19 @@ library(patchwork)
 library(grid)
 library(RColorBrewer)
 
-g1_plot <- function(data, species){
-  coul <- brewer.pal(10, "Set3") 
-  g1 <- data %>%
-    pivot_longer(cols = c(TP_cum, FP_cum), names_to = "type") %>%
-    ggplot() +
-    geom_bar(aes(fill = type, y = value, x = category_dbl), 
-             position = "stack", 
-             stat = "identity") +
-    ggtitle(species) +
-    scale_fill_manual(values = coul[c(6, 1)], 
-                      labels = c("False Positive", "True Positive")) +
-    theme_bw() +
-    labs(x = "Confidence threshold", 
-         y = "Remaining BirdNET detections (%)") +
-    theme(axis.title = element_text(size = 16),
-          axis.text = element_text(size = 12),
-          legend.title = element_blank(),
-          legend.text = element_text(size = 11),
-          legend.position = c(0.80, 0.80),
-          title = element_text(size = 14))
-  
-  return(g1)
-}
-
 g1_plot_1 <- function(data, species){
   coul <- brewer.pal(10, "Set3") 
   
-  threshold <- data %>%
-    filter(rate_cum > 0.90) %>%
-    slice_min(category_dbl) %>%
-    pull(category_dbl)
+  ## create outlier threshold if non of rate_cum is larger than 0.9
   
+  if(all(data$rate_cum < 0.90)){
+    threshold <- 0.975
+  } else {
+    threshold <- data %>%
+      filter(rate_cum > 0.90) %>%
+      slice_min(category_dbl) %>%
+      pull(category_dbl)
+  }
   
   g1 <- data %>%
     pivot_longer(cols = c(TP_cum, FP_cum), names_to = "type") %>%
@@ -88,32 +66,26 @@ data_all <- bind_rows(data_2020, data_2021) %>%
 
 
 
+# calibration curves ------------------------------------------------------
 
-# calibration curves using loess ------------------------------------------
-
-rate <- data_validation %>%
-  group_nest(common_name, scientific_name, category) %>%
-  mutate(rate = map_dbl(.x = data, .f =~ sum(.x$observed == "Y")/nrow(.x))) %>%
-  separate(col = category, into = c("from", "to"), sep = ",") %>%
-  mutate(from = str_extract(from, pattern = "[^\\(]+") %>% as.numeric(),
-         to = str_extract(to, pattern = "[^\\]]+") %>% as.numeric()) %>%
-  mutate(category_dbl = (from + to)/2) %>%
-  select(-data)
+rate_1 <- data_validation %>%
+  mutate(observed = ifelse(observed == "Y", 1, 0)) 
 
 coul <- brewer.pal(12, "Paired") 
 coul <- colorRampPalette(coul)(19)
 
-g <- ggplot(rate, aes(x = category_dbl,
-                      y = rate,
-                      group = common_name,
-                      colour = common_name)) +
-  geom_point(size = 3, 
-             alpha = 0.2) +
+g <- ggplot(rate_1, aes(x = confidence, 
+                        y = observed, 
+                        group = common_name,
+                        colour = common_name)) + 
+  geom_point(size = 5, 
+             alpha = 0.1) +
   geom_line(stat = "smooth",
-            method = "loess", # span is 0.75 by default
+            method = "glm", 
             se = FALSE, 
+            method.args = list(family = binomial),
             linewidth = 1.5,
-            alpha = 0.7) + 
+            alpha = 0.7) +
   scale_colour_manual(values = coul) +
   scale_x_continuous(limits = c(0.1, 1), expand = c(0, 0), breaks = seq(0.1, 1, by = 0.3)) +
   scale_y_continuous(limits = c(0, 1)) + 
@@ -122,7 +94,7 @@ g <- ggplot(rate, aes(x = category_dbl,
        y = "True positive rate",
        colour = "Species") +
   theme(axis.title = element_text(size = 16),
-        axis.text = element_text(size = 12),
+        axis.text = element_text(size = 14),
         legend.title = element_blank(),
         legend.text = element_text(size = 12),
         legend.position = "bottom",
@@ -132,46 +104,45 @@ g <- ggplot(rate, aes(x = category_dbl,
   guides(colour = guide_legend(ncol = 4)) 
 
 
-# ggsave(plot = g,
-#        filename = here("docs", "figures", "calibration_curves.PNG"),
-#        width = 28,
-#        height = 20,
-#        units = "cm", 
-#        dpi = 300)
+ggsave(plot = g,
+       filename = here("docs", "figures", "calibration_curves_logistic.PNG"),
+       width = 24,
+       height = 19,
+       units = "cm",
+       dpi = 300)
 
 
-# finding species-specific thresholds (loess) ------------------------------
+# finding species-specific thresholds (logistic) --------------------------
 
-rate_loess <- rate %>%
-  group_nest(common_name) %>%
-  mutate(rate_loess = map(.x = data, .f =~ loess(rate ~ category_dbl, data = .x) %>%
-                            predict() %>%
-                            ifelse(. > 1, 1, .))) %>%
-  unnest(cols = c(data, rate_loess)) %>%
-  select(common_name, scientific_name, category_dbl, rate_loess)
+logistic_models <- rate_1 %>%
+  group_nest(common_name, scientific_name) %>%
+  mutate(model = map(.x = data, .f =~ glm(observed ~ confidence, data = .x, family = binomial))) %>%
+  select(common_name, scientific_name, model)
 
-
-rate_loess_count <- data_all %>%
-  count(common_name, scientific_name, category) %>%
+rate_logistic_count <- data_all %>%
+  group_nest(common_name, scientific_name, category) %>%
   separate(col = category, into = c("from", "to"), sep = ",") %>%
   mutate(from = str_extract(from, pattern = "[^\\(]+") %>% as.numeric(),
          to = str_extract(to, pattern = "[^\\]]+") %>% as.numeric()) %>%
   mutate(category_dbl = (from + to)/2) %>%
-  left_join(rate_loess) %>%
-  drop_na(rate_loess) %>% # to keep only target species
-  mutate(TP = n * rate_loess,
-         FP = n * (1 - rate_loess)) %>%
+  filter(common_name %in% logistic_models$common_name) %>% # to keep only target species
+  left_join(logistic_models) %>%
+  mutate(rate_logistic = map2(.x = data, .y = model, 
+                              .f =~ predict(.y, newdata = .x, type = "response"))) %>%
+  mutate(TP = map_dbl(.x = rate_logistic, .f =~ sum(.x)),
+         FP = map_dbl(.x = rate_logistic, .f =~ length(.x) - sum(.x)),
+         n = map_dbl(.x = rate_logistic, .f =~ length(.x))) %>%
   group_by(common_name) %>%
   mutate(TP_cum = revcumsum(TP)/sum(n)*100, # total number of true positives after applying threshold
          FP_cum = revcumsum(FP)/sum(n)*100, # total number of false positives after applying threshold
-         rate_cum = TP_cum/(TP_cum + FP_cum))
+         rate_cum = TP_cum/(TP_cum + FP_cum)) %>%
+  ungroup() %>%
+  select(-data, -model, -rate_logistic)
 
 
+# bar plot visualization to view thresholds and FP, TP, and total  --------
 
-# visualization: single species threshold setting bar plot ----------------
-
-
-g1_list <- rate_loess_count %>%
+g1_list <- rate_logistic_count %>%
   group_nest(common_name, scientific_name) %>%
   mutate(g1 = map2(.x = data, 
                    .y = common_name, 
@@ -223,9 +194,10 @@ ggsave(plot = S4,
 
 
 
-# visualization: multiple species threshold setting comparison ------------
 
-g1_list_1 <- rate_loess_count %>%
+# comparison between four species -----------------------------------------
+
+g1_list_1 <- rate_logistic_count %>%
   group_nest(common_name, scientific_name) %>%
   mutate(g1 = map2(.x = data, 
                    .y = common_name, 
@@ -251,6 +223,9 @@ ggsave(plot = level_patch_1,
        height = 18,
        units = "cm",
        dpi = 300)
+
+
+
 
 
 

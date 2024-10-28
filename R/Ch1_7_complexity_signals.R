@@ -278,11 +278,11 @@ complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
 # correlation between complexity and performance --------------------------
 
 load(here("R", "complexity_metrics_1.rda"))
-load(here("R", "thresholds_table_s2.rda"))
+load(here("R", "table_final.rda"))
 
 complexity_cor <- complexity_metrics %>%
-  left_join(thresholds_table_s2, by = join_by(common_name, scientific_name)) %>%
-mutate(common_name = factor(common_name, levels = rev(thresholds_table_s2$common_name)))
+  left_join(table_final, by = join_by(common_name, scientific_name)) %>%
+mutate(common_name = factor(common_name, levels = rev(table_final$common_name)))
 
 coul <- brewer.pal(12, "Paired") 
 coul <- colorRampPalette(coul)(19)
@@ -301,7 +301,7 @@ duration_plot <- complexity_cor %>%
   labs(x = NULL, 
        y = "Duration (s)") +
   theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
+        axis.title = element_text(size = 16),
         axis.title.x = element_text(margin = margin(t = 5)),
         legend.position = "none",
         plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
@@ -320,7 +320,7 @@ bandwidth_plot <- complexity_cor %>%
   labs(x = NULL, 
        y = "Bandwidth (kHz)") +
   theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
+        axis.title = element_text(size = 16),
         axis.title.x = element_text(margin = margin(t = 5)),
         legend.position = "none",
         plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
@@ -339,7 +339,7 @@ inflections_plot <- complexity_cor %>%
   labs(x = NULL, 
        y = "No. of inflections") +
   theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
+        axis.title = element_text(size = 16),
         axis.title.x = element_text(margin = margin(t = 5)),
         legend.position = "none",
         plot.margin = margin(0, 0.3, 0, 0.3, "cm"))

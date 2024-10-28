@@ -147,8 +147,14 @@ g_OSFL <- pro_1 %>%
   geom_point(aes(size = num_recordings), 
              alpha = 0.3,
              shape = 20) +
-  geom_line(stat = "smooth", method = "loess", 
-            se = FALSE, alpha = 0.5, size = 1.5) +
+  geom_line(stat = "smooth",
+            method = "glm", 
+            se = FALSE, 
+            method.args = list(family = binomial),
+            linewidth = 1.5,
+            alpha = 0.5) +
+  # geom_line(stat = "smooth", method = "loess", 
+  #           se = FALSE, alpha = 0.5, size = 1.5) +
   scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
   scale_x_continuous(breaks = seq(0.1, 1, by = 0.3)) +
@@ -189,8 +195,14 @@ g_YRWA <- pro_1 %>%
   geom_point(aes(size = num_recordings), 
              alpha = 0.3,
              shape = 20) +
-  geom_line(stat = "smooth", method = "loess", 
-            se = FALSE, alpha = 0.5, size = 1.5) +
+  # geom_line(stat = "smooth", method = "loess", 
+  #           se = FALSE, alpha = 0.5, size = 1.5) +
+  geom_line(stat = "smooth",
+            method = "glm", 
+            se = FALSE, 
+            method.args = list(family = binomial),
+            linewidth = 1.5,
+            alpha = 0.5) +
   scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
   scale_x_continuous(breaks = seq(0.1, 1, by = 0.3)) +
@@ -231,8 +243,14 @@ g_VATH <- pro_1 %>%
   geom_point(aes(size = num_recordings), 
              alpha = 0.3,
              shape = 20) +
-  geom_line(stat = "smooth", method = "loess", 
-            se = FALSE, alpha = 0.5, size = 1.5) +
+  # geom_line(stat = "smooth", method = "loess", 
+  #           se = FALSE, alpha = 0.5, size = 1.5) +
+  geom_line(stat = "smooth",
+            method = "glm", 
+            se = FALSE, 
+            method.args = list(family = binomial),
+            linewidth = 1.5,
+            alpha = 0.5) +
   scale_color_manual(values = c("#999999", "#E7B800","#FC4E07", "#00AFFB")) +
   scale_size(range = c(5, 25)) +
   scale_x_continuous(breaks = seq(0.1, 1, by = 0.3)) +
