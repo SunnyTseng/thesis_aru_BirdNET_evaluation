@@ -7,8 +7,8 @@ library(RColorBrewer)
 
 
 # load data ---------------------------------------------------------------
-load(here("R", "rate_loess_count.rda"))
-load(here("R", "rate_logistic_count.rda"))
+load(here("R", "rda_files", "rate_loess_count.rda"))
+load(here("R", "rda_files", "rate_logistic_count.rda"))
 
 data_2020 <- read_csv(here("data", "processed", "2020_passerine_BirdNET_updated.csv"))
 data_2021 <- read_csv(here("data", "processed", "2021_passerine_BirdNET.csv"))
@@ -27,6 +27,9 @@ thresholds_table_s1 <- rate_logistic_count %>%
 
 
 # species-specific threshld achieving 0.9 precision ----------------------
+
+
+
 thresholds_table_out <- rate_logistic_count %>%
   filter(common_name %in% c("Brown Creeper", "Varied Thrush")) %>%
   group_by(common_name, scientific_name) %>%

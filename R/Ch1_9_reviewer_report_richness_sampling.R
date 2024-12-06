@@ -83,4 +83,70 @@ ggsave(plot = plot,
 
 
 
+# stratified versus simple random sampling --------------------------------
+
+NOFL_full <- detection %>%
+  filter(common_name == "Northern Flicker") %>%
+  mutate(id = row_number())
+
+coul <- brewer.pal(10, "Set3") 
+
+# stratified sampling
+stratified <- NOFL_full %>%
+  slice_sample(n = 10, by = category) %>%
+  mutate(sampled = "A") %>%
+  right_join(NOFL_full) %>%
+  select(id, category, confidence, sampled) %>%
+  mutate(sampled = if_else(is.na(sampled), "B", sampled)) %>%
+  
+  ggplot() +
+  geom_bar(aes(fill = sampled, x = category), 
+           position = "stack") +
+  theme_bw() +
+  scale_fill_manual(values = coul[c(6, 1)], 
+                    labels = c("Sampled", "Not sampled")) +
+  scale_x_discrete(labels = seq(0.1, 1, 0.05)) +
+  labs(x = "Confidence value", 
+       y = "No. of BirdNET observations") +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 11),
+        legend.position = c(0.80, 0.80),
+        title = element_text(size = 14))
+
+stratified
+
+# simple random sampling
+simple <- NOFL_full %>%
+  slice_sample(n = 180) %>%
+  mutate(sampled = "A") %>%
+  right_join(NOFL_full) %>%
+  select(id, category, confidence, sampled) %>%
+  mutate(sampled = if_else(is.na(sampled), "B", sampled)) %>%
+  
+  ggplot() +
+  geom_bar(aes(fill = sampled, x = category), 
+           position = "stack") +
+  theme_bw() +
+  scale_fill_manual(values = coul[c(6, 1)], 
+                    labels = c("Sampled", "Not sampled")) +
+  scale_x_discrete(labels = seq(0.1, 1, 0.05)) +
+  labs(x = "Confidence value", 
+       y = "No. of BirdNET observations") +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 11),
+        legend.position = c(0.80, 0.80),
+        title = element_text(size = 14))
+
+simple
+  
+
+# comparing the method of deciding the threshold --------------------------
+
+
+
+
 
