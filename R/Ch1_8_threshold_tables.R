@@ -5,6 +5,33 @@ library(here)
 library(gt)
 library(RColorBrewer)
 
+# find precision given a threshold
+threshold2precision <- function(probability_data, threshold){
+  threshold <- probability_data %>%
+    filter(confidence > threshold) %>%
+    pull(probability) %>%
+    mean()
+}
+
+# find the data ramained given a threshold
+threshold2remain <- function(probability_data, threshold){
+  remain <- probability_data %>%
+    filter(confidence > threshold) %>%
+    nrow()
+  
+  remain/nrow(probability_data)
+}
+
+# function to determine the threshold given specified precision level
+precision2threshold <- function(threshold_table, precision){
+  model <- glm(precision ~ threshold, 
+               data = threshold_table,
+               family = binomial)
+  
+  (log(precision/(1 - precision)) - model$coefficients[1])/model$coefficients[2]
+  
+}
+
 
 # load data ---------------------------------------------------------------
 load(here("R", "rda_files", "rate_loess_count.rda"))
@@ -16,6 +43,11 @@ data_all <- bind_rows(data_2020, data_2021) %>%
   mutate(category = cut(x = confidence, breaks = seq(0.1, 1, 0.05))) %>%
   filter(common_name %in% rate_logistic_count$common_name)
 
+data_validation <- list.files(here("data"), pattern = "*finished.csv") %>%
+  map_df(~ read_csv(paste0("./data/", .)))
+
+
+
 # universal threshold of 0.7 ---------------------------------------------
 thresholds_table_s1 <- rate_logistic_count %>%
   filter(from == 0.7) %>%
@@ -26,8 +58,45 @@ thresholds_table_s1 <- rate_logistic_count %>%
   arrange(from, desc(rate_cum), proportion_detection) 
 
 
-# species-specific threshld achieving 0.9 precision ----------------------
 
+# species-specific threshld achieving 0.9 precision ----------------------
+logistic_models <- data_validation %>%
+  mutate(observed = ifelse(observed == "Y", 1, 0)) %>%
+  group_nest(common_name, scientific_name) %>%
+  mutate(model = map(.x = data, .f =~ glm(observed ~ confidence, 
+                                          data = .x, 
+                                          family = binomial))) %>%
+  select(common_name, scientific_name, model)
+
+all_probability <- data_all %>%
+  group_nest(common_name, scientific_name) %>%
+  left_join(logistic_models) %>%
+  mutate(probability_data = map2(.x = data, .y = model,
+                            .f =~ .x %>% 
+                              mutate(probability = predict(.y, 
+                                                           newdata = .x, 
+                                                           type = "response")))) 
+
+threshold_value <- c()
+for (i in 1:nrow(all_probability)) {
+  temp <- tryCatch({
+      tibble(threshold = seq(0, 1, 0.001)) %>%
+        mutate(data_remained = map_dbl(.x = threshold, 
+                                       .f = ~ threshold2remain(all_probability$probability_data[[i]], .x))) %>%
+        mutate(precision = map_dbl(.x = threshold, 
+                                   .f = ~ threshold2precision(all_probability$probability_data[[i]], .x))) %>%
+        precision2threshold(precision = 0.9)
+    },
+    error = function(e) {
+      NA  # Return NA if an error occurs
+    })
+  
+  threshold_value <- c(threshold_value, temp)
+}
+
+all_probability %>%
+  mutate(threshold = threshold_value) %>%
+  arrange(threshold)
 
 
 thresholds_table_out <- rate_logistic_count %>%

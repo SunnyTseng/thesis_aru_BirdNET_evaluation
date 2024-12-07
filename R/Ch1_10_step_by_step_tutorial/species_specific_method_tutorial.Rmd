@@ -139,6 +139,7 @@ threshold_table <- tibble(threshold = seq(0, 1, 0.001)) %>%
                                  .f =~ threshold2remain(NOFL_probability, .x))) %>%
   mutate(precision = map_dbl(.x = threshold, 
                              .f =~ threshold2precision(NOFL_probability, .x)))
+
 ```
 
 ```{r echo = FALSE}
