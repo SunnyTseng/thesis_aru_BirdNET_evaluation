@@ -1,17 +1,16 @@
 ---
 title: "Setting BirdNET species-specific threshold"
 author: "Sunny Tseng"
-date: "`r Sys.Date()`"
-output: html_document
+date: "2024-12-12"
+output: pdf_document
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 This document provides a detailed, step-by-step guide to the methodology and R code used in our analysis for setting species-specific thresholds for BirdNET, as described in the accompanying publication. By sharing these instructions and code, we aim to facilitate reproducibility and empower researchers to apply these methods to their own datasets.
 
-```{r library, message = FALSE}
+
+```r
 # set up the library
 library(tidyverse)
 ```
@@ -36,7 +35,8 @@ Create a validation dataset by performing stratified sampling on the BirdNET out
 
 This stratified sampling ensures an even distribution of confidence values in the validation dataset, providing a representative sample for assessing threshold.
 
-```{r eval = FALSE}
+
+```r
 # read in the output from BirdNET
 birdnet_output <- read_csv("birdnet_full.csv")
 
@@ -49,7 +49,8 @@ NOFL_validation <- birdnet_output %>%
 
 (Optional) To validate BirdNET’s predictions, visually or aurally confirm whether each prediction is a True Positive (TP) or a False Positive (FP). This involves listening to the audio segments and examining their spectrograms. To streamline the process, we developed a BirdNET Validation ShinyApp, which integrates audio playback and spectrogram visualization for efficient review. Refer to the [Github page](https://github.com/SunnyTseng/BirdNET_validation) for detailed usage:
 
-```{r eval = FALSE}
+
+```r
 # use install.packages("PACKAGE_NAME") if you don't have the following required packages installed yet
 library(shiny) 
 library(bslib)
@@ -70,7 +71,8 @@ shiny::runGitHub("BirdNET_validation", "SunnyTseng")
 
 We used a validated Northern Flicker dataset to demonstrate the following process. The audio data were collected from the John Prince Research Forest in interior British Columbia, Canada.
 
-```{r message = FALSE, warning = FALSE}
+
+```r
 # edit the path as needed
 NOFL_validation_finished <- read_csv("Northern_Flicker_finished.csv")
 ```
@@ -79,35 +81,27 @@ NOFL_validation_finished <- read_csv("Northern_Flicker_finished.csv")
 
 Apply a logistic regression model to convert BirdNET confidence scores into probabilities, This step establishes the relationship between BirdNET's confidence scores and the validated outcomes (True Positive or False Positive).
 
-```{r message = FALSE, warning = FALSE}
+
+```r
 # fit logistic model using glm()
 NOFL_model <- glm(observed ~ confidence, 
                   data = NOFL_validation_finished, 
                   family = binomial)
 ```
 
-```{r echo = FALSE}
-ggplot(NOFL_validation_finished, aes(x = confidence, 
-                        y = observed)) + 
-  geom_point(size = 5, 
-             alpha = 0.1) +
-  geom_line(stat = "smooth",
-            method = "glm", 
-            se = FALSE, 
-            method.args = list(family = binomial),
-            linewidth = 1.5) +
-  scale_x_continuous(limits = c(0.1, 1), expand = c(0, 0), breaks = seq(0.1, 1, by = 0.3)) +
-  scale_y_continuous(limits = c(0, 1)) + 
-  theme_bw() +
-  labs(x = "BirdNET confidence", 
-       y = "True positive rate")
+
 ```
+## `geom_smooth()` using formula = 'y ~ x'
+```
+
+![](species_specific_method_tutorial_files/figure-latex/unnamed-chunk-5-1.pdf)<!-- --> 
 
 ### Step 4: Establishing threshold relationships with precision
 
 This step calculates how different confidence thresholds influence precision and the proportion of data retained. Using the logistic regression model, we predict probabilities for all BirdNET outputs, then calculate precision and the remaining data for each threshold.
 
-```{r message = FALSE}
+
+```r
 # find precision given a threshold
 threshold2precision <- function(probability_data, threshold){
   threshold <- probability_data %>%
@@ -141,18 +135,22 @@ threshold_table <- tibble(threshold = seq(0, 1, 0.001)) %>%
                                  .f =~ threshold2remain(NOFL_probability, .x))) %>%
   mutate(precision = map_dbl(.x = threshold, 
                              .f =~ threshold2precision(NOFL_probability, .x)))
-
 ```
 
-```{r echo = FALSE}
-threshold_table %>% str()
+
+```
+## tibble [1,001 x 3] (S3: tbl_df/tbl/data.frame)
+##  $ threshold    : num [1:1001] 0 0.001 0.002 0.003 0.004 0.005 0.006 0.007 0.008 0.009 ...
+##  $ data_remained: num [1:1001] 1 1 1 1 1 1 1 1 1 1 ...
+##  $ precision    : num [1:1001] 0.684 0.684 0.684 0.684 0.684 ...
 ```
 
 ### Step 5: Determining threshold given desired precision
 
 To identify the confidence threshold required to achieve a specified level of precision, we employed a generalized linear model (GLM) with a binomial link function. This approach estimates the relationship between confidence thresholds and precision, enabling the calculation of thresholds for any desired precision level.
 
-```{r}
+
+```r
 # function to determine the threshold given specified precision level
 precision2threshold <- function(threshold_table, precision){
   model <- glm(precision ~ threshold, 
@@ -166,8 +164,8 @@ precision2threshold <- function(threshold_table, precision){
 
 Using this method, we determined thresholds corresponding to precision levels of 0.9, 0.95, and 0.99. These thresholds were visualized (red for 0.9, blue for 0.95, and green for 0.99) alongside the precision-threshold relationship.
 
-```{r message = FALSE, warning = FALSE}
 
+```r
 # thresholds for precision = 0.9 (red), 0.95 (blue), and 0.99 (green)
 t_0.9 <- precision2threshold(threshold_table, 0.9)
 t_0.95 <- precision2threshold(threshold_table, 0.95)
@@ -191,50 +189,8 @@ ggplot(threshold_table, aes(x = threshold,
        y = "Precision")
 ```
 
+![](species_specific_method_tutorial_files/figure-latex/unnamed-chunk-9-1.pdf)<!-- --> 
+
 Enjoy using BirdNET! 😃🐦😃
 
-```{r comparison, eval = FALSE, echo = FALSE, warning = FALSE}
 
-# my method
-tseng_0.9 <- precision2threshold(threshold_table, 0.9)
-
-ggplot(threshold_table, aes(x = threshold, 
-                            y = precision)) +
-  geom_line(stat = "smooth",
-            method = "glm", 
-            se = FALSE, 
-            method.args = list(family = binomial),
-            linewidth = 1.5) +
-  geom_vline(xintercept = tseng_0.9, 
-             colour = "blue",
-             linewidth = 1.5) +
-  ylim(0, 1) +
-  theme_bw() +
-  labs(x = "Confidence threshold", 
-       y = "Precision")
-
-
-# BirdNET team
-wood_0.9 <- (log(.90/(1-.90)) - NOFL_model$coefficients[1])/NOFL_model$coefficients[2]
-
-wood_table <- tibble(prediction.range.conf = seq(0,1,.001)) %>%
-  mutate(predictions.conf = 
-           predict(NOFL_model, 
-                   list(confidence = prediction.range.conf),
-                   type='response')) 
-
-ggplot(wood_table, aes(x = prediction.range.conf,
-                       y = predictions.conf)) +
-  geom_smooth(se = FALSE, 
-              colour = "black", 
-              linewidth = 1.5) +
-  geom_vline(xintercept = wood_0.9, 
-             colour = "blue",
-             linewidth = 1.5) +
-  ylim(0, 1) +
-  theme_bw() +
-  labs(x = "Confidence value", 
-       y = "Probability of true positive")
-
-
-```
