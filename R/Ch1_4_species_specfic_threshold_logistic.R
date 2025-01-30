@@ -57,12 +57,16 @@ g1_plot_1 <- function(data, species){
 # Import data -------------------------------------------------------------
 
 data_validation <- list.files(here("data"), pattern = "*finished.csv") %>%
-  map_df(~ read_csv(paste0("./data/", .)))
+  map_df(~ read_csv(paste0("./data/", .))) %>%
+  mutate(common_name = if_else(common_name == "Yellow-rumped Warbler", "Myrtle Warbler", common_name),
+         common_name = if_else(common_name == "Pacific-slope Flycatcher", "Western Flycatcher", common_name)) 
 
 data_2020 <- read_csv(here("data", "processed", "2020_passerine_BirdNET_updated.csv"))
 data_2021 <- read_csv(here("data", "processed", "2021_passerine_BirdNET.csv"))
 data_all <- bind_rows(data_2020, data_2021) %>%
-  mutate(category = cut(x = confidence, breaks = seq(0.1, 1, 0.05))) 
+  mutate(category = cut(x = confidence, breaks = seq(0.1, 1, 0.05))) %>%
+  mutate(common_name = if_else(common_name == "Yellow-rumped Warbler", "Myrtle Warbler", common_name),
+         common_name = if_else(common_name == "Pacific-slope Flycatcher", "Western Flycatcher", common_name))
 
 
 
@@ -203,7 +207,7 @@ g1_list_1 <- rate_logistic_count %>%
                    .y = common_name, 
                    .f =~ g1_plot_1(data = .x, species = .y)))
 
-level_patch <- (g1_list_1$g1[[19]] | g1_list_1$g1[[7]]) / (g1_list_1$g1[[2]] | g1_list_1$g1[[15]]) &
+level_patch <- (g1_list_1$g1[[5]] | g1_list_1$g1[[8]]) / (g1_list_1$g1[[2]] | g1_list_1$g1[[15]]) &
   plot_annotation(tag_levels = 'A') & 
   theme(plot.margin = margin(5.5, 5.5, 5.5, 8),
         plot.tag.position = c(0, 0.98)) &

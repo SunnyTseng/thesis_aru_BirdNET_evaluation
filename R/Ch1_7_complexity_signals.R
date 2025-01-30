@@ -169,16 +169,14 @@ bird_data_target <- bird_data %>%
 # save(aci_values_target, file = here("R", "aci_values_target.rda"))
 
 
-
-# ACI table ---------------------------------------------------------------
-
-load(here("R", "aci_values_target.rda"))
-
-aci_table <- aci_values_target %>%
-  mutate(mean_aci = map_dbl(.x = aci, .f =~ mean(.x)),
-         se_aci = map_dbl(.x = aci, .f =~ sd(.x)/50)) %>%
-  select(-data, -aci) %>%
-  arrange(mean_aci)
+# AIC table
+# load(here("R", "aci_values_target.rda"))
+# 
+# aci_table <- aci_values_target %>%
+#   mutate(mean_aci = map_dbl(.x = aci, .f =~ mean(.x)),
+#          se_aci = map_dbl(.x = aci, .f =~ sd(.x)/50)) %>%
+#   select(-data, -aci) %>%
+#   arrange(mean_aci)
 
 
 
@@ -196,93 +194,26 @@ aci_table <- aci_values_target %>%
 
 
 
-# complexity metrics plot -----------------------------
-
-load(here("R", "complexity_metrics.rda"))
-
-coul <- brewer.pal(12, "Paired") 
-coul <- colorRampPalette(coul)(19)
-
-## For duration
-duration_plot <- complexity_metrics %>%
-  ggplot(aes(x = reorder(common_name, bandwidth), 
-             y = duration.x,
-             colour = common_name)) +
-  geom_boxplot(size = 1, alpha = 0.4) +
-  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
-  scale_colour_manual(values = coul) +
-  scale_y_continuous(limits = c(0, 7)) + 
-  coord_flip() +
-  theme_bw() +
-  labs(x = NULL, 
-       y = "Duration (s)") +
-  theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.title.x = element_text(margin = margin(t = 5)),
-        legend.position = "none",
-        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
-
-## For bandwidth
-bandwidth_plot <- complexity_metrics %>%
-  ggplot(aes(x = reorder(common_name, bandwidth), 
-             y = bandwidth,
-             colour = common_name)) +
-  geom_boxplot(size = 1, alpha = 0.4) +
-  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
-  scale_colour_manual(values = coul) +
-  scale_y_continuous(limits = c(0, 7)) + 
-  coord_flip() +
-  theme_bw() +
-  labs(x = NULL, 
-       y = "Bandwidth (kHz)") +
-  theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.title.x = element_text(margin = margin(t = 5)),
-        legend.position = "none",
-        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
-
-## For inflections
-inflections_plot <- complexity_metrics %>%
-  ggplot(aes(x = reorder(common_name, bandwidth), 
-             y = inflections,
-             colour = common_name)) +
-  geom_boxplot(size = 1, alpha = 0.4) +
-  geom_jitter(colour = "slategrey", size = 1, alpha = 0.2) +
-  scale_colour_manual(values = coul) +
-  scale_y_continuous(limits = c(0, 17)) + 
-  coord_flip() +
-  theme_bw() +
-  labs(x = NULL, 
-       y = "No. of inflections") +
-  theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.title.x = element_text(margin = margin(t = 5)),
-        legend.position = "none",
-        plot.margin = margin(0, 0.3, 0, 0.3, "cm"))
-
-## combine all plots
-
-complexity_plot <- (duration_plot + bandwidth_plot + inflections_plot) +
-  #plot_annotation(tag_levels = "A") +
-  plot_layout(axes = "collect")
-
-
-# ggsave(plot = complexity_plot,
-#        filename = here("docs", "figures", "complexity_plot.png"),
-#        width = 32,
-#        height = 22,
-#        units = "cm",
-#        dpi = 300)
 
 
 # correlation between complexity and performance --------------------------
 
-load(here("R", "complexity_metrics_1.rda"))
-load(here("R", "table_final.rda"))
+load(here("R", "rda_files", "complexity_metrics_1.rda"))
+load(here("R", "rda_files", "table_final.rda"))
 
-complexity_cor <- complexity_metrics %>%
-  left_join(table_final, by = join_by(common_name, scientific_name)) %>%
-mutate(common_name = factor(common_name, levels = rev(table_final$common_name)))
+complexity_metrics_1 <- complexity_metrics %>%
+  mutate(common_name = if_else(common_name == "Yellow-rumped Warbler", "Myrtle Warbler", common_name),
+         common_name = if_else(common_name == "Pacific-slope Flycatcher", "Western Flycatcher", common_name))
+
+table_final_1 <- table_final %>%
+  mutate(common_name = if_else(common_name == "Yellow-rumped Warbler", "Myrtle Warbler", common_name),
+         common_name = if_else(common_name == "Pacific-slope Flycatcher", "Western Flycatcher", common_name))
+
+
+complexity_cor <- complexity_metrics_1 %>%
+  left_join(table_final_1, by = join_by(common_name, scientific_name))  %>%
+  mutate(common_name = factor(common_name, levels = rev(table_final_1$common_name)))
+  
 
 coul <- brewer.pal(12, "Paired") 
 coul <- colorRampPalette(coul)(19)
