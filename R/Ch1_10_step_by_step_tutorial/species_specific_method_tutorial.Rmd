@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This document provides a detailed, step-by-step guide to the methodology and R code used in our analysis for setting species-specific thresholds for BirdNET, as described in the accompanying publication. By sharing these instructions and code, we aim to facilitate reproducibility and empower researchers to apply these methods to their own datasets.
 
+Two datasets used in this demonstration can be downloaded here: [`birdnet_full.csv`](https://github.com/SunnyTseng/thesis_aru_BirdNET_evaluation/blob/main/R/Ch1_10_step_by_step_tutorial/birdnet_full.csv) and [`Northern_Flicker_finished.csv`](https://github.com/SunnyTseng/thesis_aru_BirdNET_evaluation/blob/main/R/Ch1_10_step_by_step_tutorial/Northern_Flicker_finished.csv).
+
 ```{r library, message = FALSE}
 # set up the library
 library(tidyverse)
@@ -18,7 +20,7 @@ library(tidyverse)
 
 ### Step 1: Analyzing audio with BirdNET
 
-Process your audio data using BirdNET. The BirdNET Analyzer, available on their [Github](https://github.com/kahst/BirdNET-Analyzer) page, offers several methods for analysis. Choose the one that best suits your setup:
+Process your audio data using BirdNET, with `min_conf = 0.1`. The BirdNET Analyzer, available on their [Github](https://github.com/kahst/BirdNET-Analyzer) page, offers several methods for analysis. Choose the one that best suits your setup:
 
 -   **Windows GUI**: Ideal for users on a Windows operating system, offering a graphical user interface for ease of use.
 
@@ -28,7 +30,7 @@ Process your audio data using BirdNET. The BirdNET Analyzer, available on their 
 
 ### Step 2: Validation
 
-Create a validation dataset by performing stratified sampling on the BirdNET output. In this example, we demonstrate the process using Northern Flicker detections:
+Create a validation dataset by performing stratified sampling on the BirdNET output. In this example, we demonstrate the process using Northern Flicker detections.
 
 1.  **Stratify Confidence Values**: Divide the BirdNET confidence scores into classes ranging from 0.1 to 1, using 0.05 increments.
 
